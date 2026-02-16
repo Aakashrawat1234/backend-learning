@@ -4,7 +4,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Login(){
-    let {serverUrl}=useContext(dataContext)
+   
+    let {serverUrl,userData,setUserData,getUserdata}=useContext(dataContext)
 
     let navigate=useNavigate();
 
@@ -15,10 +16,16 @@ function Login(){
   const handleLogin=async (e)=>{
    e.preventDefault();
 try{
-   let data=await axios.post(serverUrl+ "/api/login",{
+   let {data}=await axios.post(serverUrl+ "/api/login",{
     email,
     password
    },{withCredentials:true})
+  
+   await getUserdata();
+    setUserData(data.user);
+   if(userData){
+    navigate("/home")
+   }
    console.log(data);
 }
 catch(e){

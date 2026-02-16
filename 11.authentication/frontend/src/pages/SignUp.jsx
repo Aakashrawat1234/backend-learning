@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 
 function SignUp(){
-  let {serverUrl}=useContext(dataContext)
+  let {serverUrl,userData,setUserData,getUserdata}=useContext(dataContext)
   let navigate=useNavigate()
 
   let[firstName,setFirstName]=useState(null)
@@ -21,13 +21,27 @@ function SignUp(){
   const handleSignUp=async (e)=>{
 e.preventDefault();
 try{
-   let data=await axios.post(serverUrl+ "/api/signup",{
-    firstName,
-    lastName,
-    userName,
-    email,
-    password
-   },{withCredentials:true})
+let formdata=new FormData()
+
+formdata.append("firstName",firstName)
+formdata.append("lastName",lastName)
+formdata.append("userName",userName)
+formdata.append("email",email)
+formdata.append("password",password)
+if(backendImage){
+  formdata.append("profileImage",backendImage)
+}
+
+   let {data}=await axios.post(serverUrl+ "/api/signup",formdata,{withCredentials:true,
+    headers:{"Content-Type":"multipart/form-data"}
+    
+   })
+   await getUserdata()
+   setUserData(data.user)
+   if(userData){
+    navigate("/home")
+   }
+   
    console.log(data);
 }
 catch(e){
@@ -37,11 +51,12 @@ console.log(e.message);
 
 let[frontendImage,setFrontendImage]=useState(dp)
 let[backendImage,setBackendImage]=useState(null)
+
   function handleImage(e){
- let file=e.target.files[0];
- setBackendImage(file)
- let image=URL.createObjectURL(file)
- setFrontendImage(image)
+      let file=e.target.files[0];
+      setBackendImage(file)
+     let image=URL.createObjectURL(file)
+      setFrontendImage(image)
   }
     return(
       <div className="w-full h-[100vh] bg-black flex justify-center items-center">

@@ -1,6 +1,10 @@
+import { error } from "console";
+import uploadOnCloudinary from "../config/cloudinary.js";
 import generateToken from "../config/token.js";
 import UserModel from "../model/user.model.js";
 import bcrypt from "bcryptjs";
+import { response } from "express";
+
 
 export const signup=async (req,res)=>{
     try{
@@ -9,6 +13,13 @@ export const signup=async (req,res)=>{
         if(!firstName || !lastName || !email || !password || !userName){
              return res.status(400).json({message:"Send all details"})
         }
+
+        
+       let profileImage;
+       if(req.file){
+      profileImage= await uploadOnCloudinary(req.file.path)
+       }
+        
         let existUser=await UserModel.findOne({email});
         if(existUser){
             return res.status(400).json({message:"User alredy exists"})
@@ -19,7 +30,8 @@ export const signup=async (req,res)=>{
             lastName,
             email,
             password:hashedPassword,
-            userName
+            userName,
+            profileImage
         })
 
           let token;
@@ -43,7 +55,8 @@ export const signup=async (req,res)=>{
             firstName,
             lastName,
             email,
-            userName
+            userName,
+            profileImage
         }})
 
     }
@@ -87,7 +100,8 @@ export const signup=async (req,res)=>{
             firstName:existUser.firstName,
             lastName:existUser.lastName,
             email:existUser.email,
-            userName:existUser.userName
+            userName:existUser.userName,
+            profileImage:existUser.profileImage
         }})
 
 
@@ -105,6 +119,24 @@ export const logOut=async (req,res)=>{
    return res.status(200).json({message:"logout sucessfully"});
   }
   catch(e){
+    return res.status(500).json(error);
+  }
+}
 
+export const getUserData=async(req,res)=>{
+  try{
+let userId=req.userId;
+if(!userId){
+  return res.status(400).json({message:"user id is not found"})
+}
+
+let user=await UserModel.findById(userId);
+if(!user){
+    return res.status(400).json({message:"user id is not found"})
+}
+return res.status(200).json(user);
+  }
+  catch(error){
+    return res.status(500).json({message:error})
   }
 }
